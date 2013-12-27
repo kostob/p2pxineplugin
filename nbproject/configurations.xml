@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="90">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>network.h</itemPath>
+      <itemPath>output_factory.h</itemPath>
+      <itemPath>output_ffmpeg.h</itemPath>
+      <itemPath>output_interface.h</itemPath>
+      <itemPath>streamer.h</itemPath>
+      <itemPath>threads.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>input_p2p.c</itemPath>
+      <itemPath>network.c</itemPath>
+      <itemPath>output_factory.c</itemPath>
+      <itemPath>output_ffmpeg.c</itemPath>
+      <itemPath>streamer.c</itemPath>
+      <itemPath>threads.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>true</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <incDir>
+            <pElem>/usr/local/include</pElem>
+            <pElem>/usr/home/tobias/dev/GRAPES/include</pElem>
+          </incDir>
+          <commandLine>-O0</commandLine>
+          <preprocessorList>
+            <Elem>DEBUG</Elem>
+          </preprocessorList>
+        </cTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inp_p2p.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>/usr/home/tobias/dev/GRAPES/src</pElem>
+            <pElem>/usr/lib</pElem>
+            <pElem>/usr/local/lib</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>pthread</linkerLibLibItem>
+            <linkerLibLibItem>grapes</linkerLibLibItem>
+            <linkerLibLibItem>avformat</linkerLibLibItem>
+            <linkerLibLibItem>avcodec</linkerLibLibItem>
+            <linkerLibLibItem>avfilter</linkerLibLibItem>
+            <linkerLibLibItem>avdevice</linkerLibLibItem>
+            <linkerLibLibItem>avresample</linkerLibLibItem>
+            <linkerLibLibItem>avutil</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/inp_p2p.so.tar</output>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
+      <item path="input_p2p.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="network.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="network.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_factory.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="output_factory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_ffmpeg.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="output_ffmpeg.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_interface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="streamer.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="streamer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="threads.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="threads.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>true</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>/usr/local/include</pElem>
+            <pElem>/usr/home/tobias/dev/GRAPES/include</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inp_p2p.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>/usr/home/tobias/dev/GRAPES/src</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>pthread</linkerLibLibItem>
+            <linkerLibLibItem>grapes</linkerLibLibItem>
+            <linkerLibLibItem>avformat</linkerLibLibItem>
+            <linkerLibLibItem>avcodec</linkerLibLibItem>
+            <linkerLibLibItem>avfilter</linkerLibLibItem>
+            <linkerLibLibItem>avdevice</linkerLibLibItem>
+            <linkerLibLibItem>avresample</linkerLibLibItem>
+            <linkerLibLibItem>avutil</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/inp_p2p.so.tar</output>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
+      <item path="input_p2p.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="network.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="network.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_factory.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="output_factory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_ffmpeg.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="output_ffmpeg.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="output_interface.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="streamer.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="streamer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="threads.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="threads.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
