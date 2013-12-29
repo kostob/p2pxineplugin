@@ -8,10 +8,12 @@
 #ifndef OUTPUT_FFMPEG_H
 #define	OUTPUT_FFMPEG_H
 
+#include "input_p2p.h"
+
 extern int nextChunk;
 struct output_context;
 
-struct output_context *output_ffmpeg_init(const char *config);
+struct output_context *output_ffmpeg_init(p2p_input_plugin_t *plugin, const char *config);
 int output_ffmpeg_deliver(struct output_context *context, struct chunk *c);
 void output_ffmpeg_close(struct output_context *context);
 int output_ffmpeg_deliver_secured_data_chunk(struct output_context *context, struct chunk *securedData);

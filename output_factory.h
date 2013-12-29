@@ -20,6 +20,6 @@ struct output_module {
     struct output_interface *module;
 };
 
-struct output_module *output_init(const char *config);
+struct output_module *output_init(p2p_input_plugin_t *plugin, const char *config);
 
 #endif	/* OUTPUT_FACTORY_H */

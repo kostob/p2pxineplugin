@@ -32,6 +32,7 @@
 #include "network.h"
 #include "streamer.h"
 //#include "output_ffmpeg.h"
+#include "output_factory.h"
 
 extern struct output_module *output;
 
@@ -188,9 +189,9 @@ void network_handle_chunk_message(struct nodeID *remote, uint8_t *buffer, int nu
         fprintf(stderr, "Received chunk %d from peer: %s\n", c.id, remoteAddress);
 #endif
         // check if there are secure data needed...
-        if (output->module->secure_data_enabled_chunk(output->context) == 1) {
-            struct ChunkIDSet *cset = chunkID_set_init("size=1");
-            chunkID_set_add_chunk(cset, c.id);
+        if (output->module->secured_data_enabled_chunk(output->context) == 1) {
+            struct ChunkIDSet *cset = (struct ChunkIDSet *) chunkID_set_init("size=1");
+            chunkID_set_add_chunk((struct chunkID_set *) cset, c.id);
             // ask server for secured data for the chunk
             requestSecuredDataChunk(serverSocket, cset, transid);
         } else {

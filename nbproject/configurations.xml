@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>input_p2p.h</itemPath>
       <itemPath>network.h</itemPath>
       <itemPath>output_factory.h</itemPath>
       <itemPath>output_ffmpeg.h</itemPath>
@@ -50,12 +51,14 @@
           <incDir>
             <pElem>/usr/local/include</pElem>
             <pElem>/usr/home/tobias/dev/GRAPES/include</pElem>
+            <pElem>.</pElem>
           </incDir>
-          <commandLine>-O0</commandLine>
-          <preprocessorList>
-            <Elem>DEBUG</Elem>
-          </preprocessorList>
         </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inp_p2p.${CND_DLIB_EXT}</output>
           <linkerAddLib>
@@ -72,6 +75,7 @@
             <linkerLibLibItem>avdevice</linkerLibLibItem>
             <linkerLibLibItem>avresample</linkerLibLibItem>
             <linkerLibLibItem>avutil</linkerLibLibItem>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -88,6 +92,8 @@
         </packFileList>
       </packaging>
       <item path="input_p2p.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="input_p2p.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="network.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -124,10 +130,14 @@
           <incDir>
             <pElem>/usr/local/include</pElem>
             <pElem>/usr/home/tobias/dev/GRAPES/include</pElem>
+            <pElem>.</pElem>
           </incDir>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -139,6 +149,8 @@
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inp_p2p.${CND_DLIB_EXT}</output>
           <linkerAddLib>
             <pElem>/usr/home/tobias/dev/GRAPES/src</pElem>
+            <pElem>/usr/lib</pElem>
+            <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>pthread</linkerLibLibItem>
@@ -149,6 +161,7 @@
             <linkerLibLibItem>avdevice</linkerLibLibItem>
             <linkerLibLibItem>avresample</linkerLibLibItem>
             <linkerLibLibItem>avutil</linkerLibLibItem>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -165,6 +178,8 @@
         </packFileList>
       </packaging>
       <item path="input_p2p.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="input_p2p.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="network.c" ex="false" tool="0" flavor2="0">
       </item>

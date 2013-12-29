@@ -17,10 +17,12 @@
 #include <chunkidset.h>
 #include <scheduler_common.h>
 
-extern char* configServerAddress;
-extern int configServerPort;
-extern char* configInterface;
-extern int configPort;
+#include "input_p2p.h"
+
+static char* configServerAddress;
+static int configServerPort;
+static char* configInterface;
+static int configPort;
 
 extern struct ChunkBuffer *chunkBuffer;
 extern int chunkBufferSize;
@@ -36,7 +38,7 @@ extern struct nodeID *localSocket;
 extern struct psample_context *peersampleContext;
 extern struct nodeID *serverSocket;
 
-int init(char *interface, char *serverAddress, int serverPort, int localPort);
+int init(p2p_input_plugin_t *plugin);
 
 #endif	/* STREAMER_H */
 

@@ -18,15 +18,15 @@
 #include "network.h"
 #include "output_factory.h"
 
-char* configServerAddress = "127.0.0.1";
-int configServerPort = 6666;
-char* configInterface = "lo0";
-int configPort = 5555;
-char *configPeersample = "protocol=cyclon";
-char *configChunkBuffer = "size=100,time=now"; // size must be same value as chunkBufferSizeMax
-char *configChunkIDSet = "size=100"; // size must be same value as chunkBufferSizeMax
-char *configOutput = "buffer=75";
-int configOutputBufferSize = 75;
+static char* configServerAddress = "127.0.0.1";
+static int configServerPort = 6666;
+static char* configInterface = "lo0";
+static int configPort = 5555;
+static char *configPeersample = "protocol=cyclon";
+static char *configChunkBuffer = "size=100,time=now"; // size must be same value as chunkBufferSizeMax
+static char *configChunkIDSet = "size=100"; // size must be same value as chunkBufferSizeMax
+static char *configOutput = "buffer=75,dechunkiser=raw,payload=avf";
+static int configOutputBufferSize = 75;
 
 struct ChunkBuffer *chunkBuffer = NULL;
 int chunkBufferSize = 0;
@@ -76,27 +76,27 @@ void parseCommandLineArguments(int argc, char* argv[]) {
     }
 }
 
-int init(char *interface, char *serverAddress, int serverPort, int localPort) {
+int init(p2p_input_plugin_t *plugin) { //char *interface, char *serverAddress, int serverPort, int localPort) {
 
 #ifdef DEBUG
-    fprintf(stderr, "DEBUG: Called streamer.c init\n");
+    fprintf(stderr, "DEBUG: Called streamer.c init with interface=%s, serverAddress=%s, serverPort=%d, localPort=%d\n", plugin->interface, plugin->host, plugin->host_port, plugin->own_port);
 #endif
 
     // create the interface for connection
-    char *my_addr = network_create_interface(interface);
+    char *my_addr = network_create_interface(plugin->interface);
 
     if (strlen(my_addr) == 0) {
-        fprintf(stderr, "Cannot find network interface %s\n", interface);
+        fprintf(stderr, "Cannot find network interface %s\n", plugin->interface);
         return -1;
     }
 #ifdef DEBUG
-    fprintf(stderr, "Created network successfully\n");
+    fprintf(stderr, "Created network interface successfully\n");
 #endif
 
     // initialize net helper
-    localSocket = net_helper_init(my_addr, localPort, "");
+    localSocket = net_helper_init(my_addr, plugin->own_port, "");
     if (localSocket == NULL) {
-        fprintf(stderr, "Error creating my socket (%s:%d)!\n", my_addr, localPort);
+        fprintf(stderr, "Error creating my socket (%s:%d)!\n", my_addr, plugin->own_port);
         return -1;
     }
 #ifdef DEBUG
@@ -104,15 +104,18 @@ int init(char *interface, char *serverAddress, int serverPort, int localPort) {
 #endif
 
     // initialize PeerSampler
-    peersampleContext = psample_init(localSocket, NULL, 0, configPeersample);
+    // trying to avoid the bug..
+    char* sa = strdup(plugin->host);
+    peersampleContext = psample_init(localSocket, NULL, 0, configPeersample); // BUG: THIS WILL REMOVE THE CONTENT OF "serverAddress"...
     if (peersampleContext == NULL) {
-        fprintf(stderr, "Error while initializing the peer sampler\n");
+        fprintf(stderr, "Error while initializing the peer sampler (config: %s)\n", configPeersample);
         return -1;
     }
 #ifdef DEBUG
-    fprintf(stderr, "PeerSampler successfully initialized\n");
+    fprintf(stderr, "PeerSampler successfully initialized (config: %s)\n", configPeersample);
 #endif
-
+    plugin->host = strdup(sa);
+    free(sa);
 
     // initialize ChunkBuffer
     chunkBuffer = (struct ChunkBuffer*) cb_init(configChunkBuffer);
@@ -163,25 +166,28 @@ int init(char *interface, char *serverAddress, int serverPort, int localPort) {
 #endif
 
     // set server
-    serverSocket = create_node(serverAddress, serverPort);
-    if(serverSocket == NULL) {
-        fprintf(stderr, "server socket could not be initialized\n");
+    serverSocket = create_node(plugin->host, plugin->host_port);
+    if (serverSocket == NULL) {
+        fprintf(stderr, "server socket could not be initialized (serverAddress=%s, serverPort=%d)\n", plugin->host, plugin->host_port);
         return -1;
     }
 #ifdef DEBUG
-    fprintf(stderr, "server socket successfully created (%s:%d)\n", serverAddress, serverPort);
+    fprintf(stderr, "server socket successfully created (%s:%d)\n", plugin->host, plugin->host_port);
 #endif
 
     // add server node to peersampler
     struct nodeID *s;
-    s = create_node(serverAddress, serverPort);
-    psample_add_peer(peersampleContext, s, NULL, 0);
+    s = create_node(plugin->host, plugin->host_port);
+    if (psample_add_peer(peersampleContext, s, NULL, 0) == -1) {
+        fprintf(stderr, "node (server) could not be added to peersampler\n");
+        return -1;
+    }
 #ifdef DEBUG
     fprintf(stderr, "server socket successfully added to peersampler context\n");
 #endif
 
     // initialize output
-    output = output_init(configOutput);
+    output = output_init(plugin, configOutput);
     if (output == NULL) {
         fprintf(stderr, "Error occurred: see message above.\n");
         return -1;
@@ -202,7 +208,7 @@ int main(int argc, char* argv[]) {
     parseCommandLineArguments(argc, argv);
 
     // initialization
-    if (init(configInterface, configServerAddress, configServerPort, configPort) != 0) {
+    if (init(NULL) != 0) {
         fprintf(stderr, "Error occurred. Please see message above for further details.\n");
         return 0;
     }

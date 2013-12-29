@@ -43,6 +43,8 @@ static void *threads_receive_data(void *mut) {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: Thread started receive_data\n");
 #endif
+    
+    p2p_input_plugin_t *plugin = (p2p_input_plugin_t *) mut;
 
     while (stopThreads != 1) {
         int numberOfReceivedBytes;
@@ -79,7 +81,7 @@ static void *threads_receive_data(void *mut) {
             }
             case MSG_TYPE_SECURED_DATA_CHUNK:
             {
-                if (output->module->secure_data_enabled_chunk(output->context) == 1) {
+                if (output->module->secured_data_enabled_chunk(output->context) == 1) {
                     pthread_mutex_lock(&chunkBufferMutex);
                     network_handle_secured_chunk_message(remote, buffer, numberOfReceivedBytes);
                     pthread_mutex_unlock(&chunkBufferMutex);
@@ -88,7 +90,7 @@ static void *threads_receive_data(void *mut) {
             }
             case MSG_TYPE_SECURED_DATA_LOGIN:
             {
-                if (output->module->secure_data_enabled_login(output->context) == 1) {
+                if (output->module->secured_data_enabled_login(output->context) == 1) {
                     network_handle_secured_login_message(remote, buffer, numberOfReceivedBytes);
                 }
                 break;
@@ -276,7 +278,7 @@ static void *threads_send_topology(void *mut) {
         fprintf(stderr, "DEBUG: I have %d neighbours:\n", numberOfNeighbours);
         for (i = 0; i < numberOfNeighbours; i++) {
             node_addr(neighbours[i], addr, 256);
-            fprintf(stderr, "DEBUG: \t%d: %s | %d\n", i, addr, node_port(neighbours[i]));
+            fprintf(stderr, "DEBUG: \t%d: %s\n", i, addr);
         }
 #endif
         if (numberOfNeighbours == 0) {
@@ -354,14 +356,14 @@ static void *threads_request_secured_data_login(void *mut) {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: Thread started request_secured_data_login\n");
 #endif
-    if (output->module->secure_data_enabled_login(output->context) == 1) {
+    if (output->module->secured_data_enabled_login(output->context) == 1) {
         requestSecuredDataLogin(serverSocket, transId++);
     }
 
     return NULL;
 }
 
-void threads_start() {
+void threads_start(p2p_input_plugin_t *plugin) {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: Called threads_start\n");
 #endif
@@ -394,7 +396,7 @@ void threads_start() {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: creating threads...\n");
 #endif
-    pthread_create(&receiveDataThread, NULL, threads_receive_data, NULL); // Thread for receiving data
+    pthread_create(&receiveDataThread, NULL, threads_receive_data, (void *) plugin); // Thread for receiving data
     pthread_create(&sendTopologyThread, NULL, threads_send_topology, NULL); // Thread for sharing the topology of the p2p network
     pthread_create(&offerChunkThread, NULL, threads_offer_chunk, NULL); // Thread for generating chunks
     pthread_create(&sendChunkThread, NULL, threads_send_chunk, NULL); // Thread for sending the chunks
@@ -407,11 +409,11 @@ void threads_start() {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: joining threads...\n");
 #endif
-    pthread_join(offerChunkThread, NULL);
-    pthread_join(receiveDataThread, NULL);
-    pthread_join(sendTopologyThread, NULL);
-    pthread_join(sendChunkThread, NULL);
-    pthread_join(requestSecuredDataLoginThread, NULL);
+    //pthread_join(offerChunkThread, NULL);
+    //pthread_join(receiveDataThread, NULL);
+    //pthread_join(sendTopologyThread, NULL);
+    //pthread_join(sendChunkThread, NULL);
+    //pthread_join(requestSecuredDataLoginThread, NULL);
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: joining threads done...\n");
 #endif

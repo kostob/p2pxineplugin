@@ -57,7 +57,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L/usr/home/tobias/dev/GRAPES/src -lpthread -lgrapes -lavformat -lavcodec -lavfilter -lavdevice -lavresample -lavutil
+LDLIBSOPTIONS=-L/usr/home/tobias/dev/GRAPES/src -L/usr/lib -L/usr/local/lib -lpthread -lgrapes -lavformat -lavcodec -lavfilter -lavdevice -lavresample -lavutil -lcunit
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -70,32 +70,32 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/inp_p2p.${CND_DLIB_EXT}: ${OBJECTFILE
 ${OBJECTDIR}/input_p2p.o: nbproject/Makefile-${CND_CONF}.mk input_p2p.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/input_p2p.o input_p2p.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/input_p2p.o input_p2p.c
 
 ${OBJECTDIR}/network.o: nbproject/Makefile-${CND_CONF}.mk network.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/network.o network.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/network.o network.c
 
 ${OBJECTDIR}/output_factory.o: nbproject/Makefile-${CND_CONF}.mk output_factory.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/output_factory.o output_factory.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/output_factory.o output_factory.c
 
 ${OBJECTDIR}/output_ffmpeg.o: nbproject/Makefile-${CND_CONF}.mk output_ffmpeg.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/output_ffmpeg.o output_ffmpeg.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/output_ffmpeg.o output_ffmpeg.c
 
 ${OBJECTDIR}/streamer.o: nbproject/Makefile-${CND_CONF}.mk streamer.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/streamer.o streamer.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/streamer.o streamer.c
 
 ${OBJECTDIR}/threads.o: nbproject/Makefile-${CND_CONF}.mk threads.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/threads.o threads.c
+	$(COMPILE.c) -O2 -I/usr/local/include -I/usr/home/tobias/dev/GRAPES/include -I. -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/threads.o threads.c
 
 # Subprojects
 .build-subprojects:

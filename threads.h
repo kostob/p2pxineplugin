@@ -8,7 +8,9 @@
 #ifndef THREADS_H
 #define	THREADS_H
 
-void threads_start();
+#include "input_p2p.h"
+
+void threads_start(p2p_input_plugin_t *plugin);
 
 #endif	/* THREADS_H */
 

@@ -1,3 +1,11 @@
+/**
+ * Xine input plugin gfor p2p video streams
+ * 
+ * parts of the code from original xine input plugins:
+ *  - input_http: mrl handling
+ *  - input_stdin_fifo: reading from stdin stuff
+ *  - input_rtp: circular buffer stuff
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,68 +17,11 @@
 #include <xine/xine_internal.h>
 #include <xine/xineutils.h>
 #include <xine/input_plugin.h>
+#include <unistd.h>
 
 #include "streamer.h"
 #include "threads.h"
-
-#define BUFSIZE 1024
-#define DEFAULT_HOST_PORT 55555
-#define OWN_PORT 44444
-
-typedef struct {
-    input_plugin_t input_plugin;
-
-    xine_stream_t *stream;
-
-    char *host;
-    int host_port;
-
-    int fh;
-    char *mrl;
-    char buf[BUFSIZE];
-    off_t curpos;
-
-    char preview[MAX_PREVIEW_SIZE];
-    off_t preview_size;
-
-    char seek_buf[BUFSIZE];
-
-    xine_t *xine;
-} p2p_input_plugin_t;
-
-typedef struct {
-    input_class_t input_class;
-
-    xine_t *xine;
-    config_values_t *config;
-
-} p2p_input_class_t;
-
-typedef struct {
-    p2p_input_plugin_t input_plugin;
-
-    // streamer
-    pthread_mutex_t chunkBufferMutex; // for chunkbuffer and chunkIDSet
-    pthread_mutex_t topologyMutex; // for peersampler
-    pthread_mutex_t peerChunkMutex; // for peerChunk
-
-    int stopThreads;
-    int transId;
-} p2p_streammer_data;
-
-extern char* configServerAddress;
-extern int configServerPort;
-extern char* configInterface;
-extern int configPort;
-
-/**
- * Retrieves the autoplay playlist from the plugin. This function is optional.
- * 
- * @param this_gen
- * @param num_files
- * @return 
- */
-static char **p2p_get_autoplay_list(input_class_t *this_gen, int *num_files);
+#include "input_p2p.h"
 
 /**
  * This function frees the memory used by the input plugin class object.
@@ -99,18 +50,19 @@ static int p2p_plugin_open(input_plugin_t *this_gen) {
     //memmove(configServerAddress, this->host, strlen(this->host) + 1); printf("%s: server address=%s\n", LOG_MODULE, configServerAddress);
     //configServerPort = this->host_port; printf("%s: server port=%d\n", LOG_MODULE, configServerPort);
     //configPort = OWN_PORT; printf("%s: own port=%d\n", LOG_MODULE, configPort);
-    
-    printf("%s: interface=%s\n", LOG_MODULE, "lo0");
+
+    printf("%s: interface=%s\n", LOG_MODULE, this->interface);
     printf("%s: server address=%s\n", LOG_MODULE, this->host);
     printf("%s: server port=%d\n", LOG_MODULE, this->host_port);
-    printf("%s: own port=%d\n", LOG_MODULE, OWN_PORT);
-    
-    if(init("lo0", this->host, this->host_port, OWN_PORT) == -1) {
+    printf("%s: own port=%d\n", LOG_MODULE, this->own_port);
+
+    this->fh = init(this); //"lo0", this->host, this->host_port, OWN_PORT);
+    if (this->fh == -1) {
         return 0;
     }
 
     // start streamer threads
-    threads_start();
+    threads_start(this);
 
     return 1;
 }
@@ -136,40 +88,80 @@ static uint32_t p2p_plugin_get_capabilities(input_plugin_t *this_gen) {
  * @return 
  */
 static off_t p2p_plugin_read(input_plugin_t *this_gen, char *buf_gen, off_t nlen) {
+    printf("%s: called p2p_plugin_read\n", LOG_MODULE);
+
     p2p_input_plugin_t *this = (p2p_input_plugin_t *) this_gen;
     char *buf = (char *) buf_gen;
-    off_t n, total;
+    struct timeval tv;
+    struct timespec timeout;
+    off_t copied = 0;
 
-    lprintf("reading %"PRId64" bytes...\n", nlen);
     if (nlen < 0)
         return -1;
 
-    total = 0;
-    if (this->curpos < this->preview_size) {
-        n = this->preview_size - this->curpos;
-        if (n > (nlen - total))
-            n = nlen - total;
-        lprintf("%"PRId64" bytes from preview (which has %"PRId64" bytes)\n", n, this->preview_size);
+    while (nlen > 0) {
 
-        memcpy(&buf[total], &this->preview[this->curpos], n);
-        this->curpos += n;
-        total += n;
-    }
+        off_t n;
 
-    if ((nlen - total) > 0) {
-        n = _x_io_file_read(this->stream, this->fh, &buf[total], nlen - total);
+        pthread_mutex_lock(&this->buffer_ring_mutex);
 
-        lprintf("got %"PRId64" bytes (%"PRId64"/%"PRId64" bytes read)\n", n, total, nlen);
+        /*
+         * if nothing in the buffer, wait for data for 5 seconds. If
+         * no data is received within this timeout, return the number
+         * of bytes already received (which is likely to be 0)
+         */
 
-        if (n < 0) {
-            _x_message(this->stream, XINE_MSG_READ_ERROR, NULL);
-            return 0;
+        if (this->buffer_count == 0) {
+            gettimeofday(&tv, NULL);
+            timeout.tv_nsec = tv.tv_usec * 1000;
+            timeout.tv_sec = tv.tv_sec + 5;
+
+            if (pthread_cond_timedwait(&this->reader_cond, &this->buffer_ring_mutex, &timeout) != 0) {
+                /* we timed out, no data available */
+                printf("%s: we timed out, no data available...\n", LOG_MODULE);
+                pthread_mutex_unlock(&this->buffer_ring_mutex);
+                return copied;
+            }
         }
 
-        this->curpos += n;
-        total += n;
+        /* Now determine how many bytes can be read. If the buffer
+         * will wrap the buffer is read in two pieces, first read
+         * to the end of the buffer, wrap the tail pointer and
+         * update the buffer count. Finally read the second piece
+         * from the base to the remaining count
+         */
+        if (nlen > this->buffer_count) {
+            n = this->buffer_count;
+        } else {
+            n = nlen;
+        }
+
+        if (((this->buffer_get_ptr - this->buffer) + n) > BUFFER_SIZE) {
+            n = BUFFER_SIZE - (this->buffer_get_ptr - this->buffer);
+        }
+
+        /* the actual read */
+        memcpy(buf, this->buffer_get_ptr, n);
+
+        buf += n;
+        copied += n;
+        nlen -= n;
+
+        /* update the tail pointer, watch for wrap arounds */
+        this->buffer_get_ptr += n;
+        if (this->buffer_get_ptr - this->buffer >= BUFFER_SIZE)
+            this->buffer_get_ptr = this->buffer;
+
+        this->buffer_count -= n;
+
+        /* signal the writer that there's space in the buffer again */
+        pthread_cond_signal(&this->writer_cond);
+        pthread_mutex_unlock(&this->buffer_ring_mutex);
     }
-    return total;
+
+    this->curpos += copied;
+
+    return copied;
 }
 
 /**
@@ -183,9 +175,8 @@ static off_t p2p_plugin_read(input_plugin_t *this_gen, char *buf_gen, off_t nlen
  * @return 
  */
 static buf_element_t *p2p_plugin_read_block(input_plugin_t *this_gen, fifo_buffer_t *fifo, off_t len) {
-    off_t total_bytes;
-    /* stdin_input_plugin_t  *this = (stdin_input_plugin_t *) this_gen; */
     buf_element_t *buf = fifo->buffer_pool_alloc(fifo);
+    int total_bytes;
 
     if (len > buf->max_size)
         len = buf->max_size;
@@ -197,7 +188,7 @@ static buf_element_t *p2p_plugin_read_block(input_plugin_t *this_gen, fifo_buffe
     buf->content = buf->mem;
     buf->type = BUF_DEMUX_BLOCK;
 
-    total_bytes = p2p_plugin_read(this_gen, (char*) buf->content, len);
+    total_bytes = p2p_plugin_read(this_gen, buf->content, len);
 
     if (total_bytes != len) {
         buf->free_buffer(buf);
@@ -220,43 +211,8 @@ static buf_element_t *p2p_plugin_read_block(input_plugin_t *this_gen, fifo_buffe
  */
 static off_t p2p_plugin_seek(input_plugin_t *this_gen, off_t offset, int origin) {
     p2p_input_plugin_t *this = (p2p_input_plugin_t *) this_gen;
-
-    lprintf("seek %"PRId64" offset, %d origin...\n", offset, origin);
-
-    if ((origin == SEEK_CUR) && (offset >= 0)) {
-
-        for (; ((int) offset) - BUFSIZE > 0; offset -= BUFSIZE) {
-            if (this_gen->read(this_gen, this->seek_buf, BUFSIZE) <= 0)
-                return this->curpos;
-        }
-
-        this_gen->read(this_gen, this->seek_buf, offset);
-    }
-
-    if (origin == SEEK_SET) {
-
-        if (offset < this->curpos) {
-
-            if (this->curpos <= this->preview_size)
-                this->curpos = offset;
-            else
-                xprintf(this->xine, XINE_VERBOSITY_LOG,
-                    _("stdin: cannot seek back! (%" PRIdMAX " > %" PRIdMAX ")\n"),
-                    (intmax_t) this->curpos, (intmax_t) offset);
-
-        } else {
-            offset -= this->curpos;
-
-            for (; ((int) offset) - BUFSIZE > 0; offset -= BUFSIZE) {
-                if (this_gen->read(this_gen, this->seek_buf, BUFSIZE) <= 0)
-                    return this->curpos;
-            }
-
-            this_gen->read(this_gen, this->seek_buf, offset);
-        }
-    }
-
-    return this->curpos;
+    
+    return -1;
 }
 
 /**
@@ -278,7 +234,7 @@ static off_t p2p_plugin_get_current_pos(input_plugin_t *this_gen) {
  * @return 
  */
 static off_t p2p_plugin_get_length(input_plugin_t *this_gen) {
-    return 0;
+    return -1;
 }
 
 /**
@@ -315,16 +271,28 @@ static char *p2p_plugin_get_mrl(input_plugin_t *this_gen) {
 static int p2p_plugin_get_optional_data(input_plugin_t *this_gen, void *data, int data_type) {
     p2p_input_plugin_t *this = (p2p_input_plugin_t *) this_gen;
 
-    switch (data_type) {
-        case INPUT_OPTIONAL_DATA_PREVIEW:
+    /* Since this input plugin deals with stream data, we
+     * are not going to worry about retaining the data packet
+     * retrieved for review purposes. Hence, the first non-preview
+     * packet read made will return the 2nd packet from the UDP/RTP stream.
+     * The first packet is only used for the preview.
+     */
 
+    if (data_type == INPUT_OPTIONAL_DATA_PREVIEW) {
+        if (!this->preview_read_done) {
+            this->preview_size = p2p_plugin_read(this_gen, this->preview, MAX_PREVIEW_SIZE);
+            if (this->preview_size < 0)
+                this->preview_size = 0;
+            lprintf("Preview data length = %d\n", this->preview_size);
+
+            this->preview_read_done = 1;
+        }
+        if (this->preview_size)
             memcpy(data, this->preview, this->preview_size);
-            return this->preview_size;
-
-            break;
+        return this->preview_size;
+    } else {
+        return INPUT_OPTIONAL_UNSUPPORTED;
     }
-
-    return INPUT_OPTIONAL_UNSUPPORTED;
 }
 
 /**
@@ -336,10 +304,10 @@ void p2p_plugin_dispose(input_plugin_t *this_gen) {
     p2p_input_plugin_t *this = (p2p_input_plugin_t *) this_gen;
 
     // free everythink in this
-    if (this->mrl) free(this->mrl);
+    free(this->mrl);
+    free(this->host);
+    free(this->interface);
     // ...
-    free(configInterface);
-    free(configServerAddress);
     free(this);
 }
 
@@ -377,6 +345,18 @@ static input_plugin_t *p2p_class_get_instance(input_class_t *class_gen, xine_str
     this->stream = stream;
     this->fh = -1; // needed?
     this->xine = class->xine;
+
+    this->buffer = malloc(BUFFER_SIZE);
+    this->buffer_put_ptr = this->buffer;
+    this->buffer_get_ptr = this->buffer;
+    this->buffer_count = 0;
+    this->curpos = 0;
+    this->buffer_max_size = BUFFER_SIZE;
+
+    // TODO: get the right interface
+    this->interface = "lo0";
+
+    this->own_port = OWN_PORT;
 
     ////////////////////
     // parse the mrl and write to host and host_port
