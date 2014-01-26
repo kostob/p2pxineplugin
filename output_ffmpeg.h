@@ -10,7 +10,7 @@
 
 #include "input_p2p.h"
 
-extern int nextChunk;
+extern int firstChunk;
 struct output_context;
 
 struct output_context *output_ffmpeg_init(p2p_input_plugin_t *plugin, const char *config);

@@ -1,6 +1,4 @@
-build/Debug/GNU-Generic/output_factory.o: output_factory.c \
-  output_factory.h output_interface.h \
-  /usr/home/tobias/dev/GRAPES/include/chunk.h input_p2p.h \
+build/Debug/GNU-Generic/output_factory.o: output_factory.c input_p2p.h \
   /usr/local/include/xine/xine_internal.h /usr/local/include/xine.h \
   /usr/local/include/xine/os_types.h /usr/local/include/xine/attributes.h \
   /usr/local/include/xine/version.h /usr/local/include/xine/refcounter.h \
@@ -25,13 +23,8 @@ build/Debug/GNU-Generic/output_factory.o: output_factory.c \
   /usr/local/include/xine/xine_internal.h \
   /usr/local/include/xine/info_helper.h \
   /usr/local/include/xine/alphablend.h \
-  /usr/local/include/xine/video_out.h
-
-output_factory.h:
-
-output_interface.h:
-
-/usr/home/tobias/dev/GRAPES/include/chunk.h:
+  /usr/local/include/xine/video_out.h output_factory.h output_interface.h \
+  /usr/home/tobias/dev/GRAPES/include/chunk.h
 
 input_p2p.h:
 
@@ -106,3 +99,9 @@ input_p2p.h:
 /usr/local/include/xine/alphablend.h:
 
 /usr/local/include/xine/video_out.h:
+
+output_factory.h:
+
+output_interface.h:
+
+/usr/home/tobias/dev/GRAPES/include/chunk.h:

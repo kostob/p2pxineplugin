@@ -35,6 +35,8 @@ pthread_mutex_t peerChunkMutex; // for peerChunk
 static int stopThreads;
 static int transId = 1;
 
+int firstChunk = -1;
+
 extern int configServerPort;
 
 extern struct output_module *output;
@@ -43,7 +45,7 @@ static void *threads_receive_data(void *mut) {
 #ifdef DEBUG
     fprintf(stderr, "DEBUG: Thread started receive_data\n");
 #endif
-    
+
     p2p_input_plugin_t *plugin = (p2p_input_plugin_t *) mut;
 
     while (stopThreads != 1) {
@@ -146,7 +148,6 @@ static void *threads_receive_data(void *mut) {
                         break;
                     case sig_offer:
                     {
-
 #ifdef DEBUG
                         fprintf(stderr, "DEBUG: 1) Message OFFER: peer offers %d chunks\n", chunkID_set_size(chunkIDSetReceived));
 #endif
@@ -156,13 +157,22 @@ static void *threads_receive_data(void *mut) {
                         pthread_mutex_lock(&chunkBufferMutex);
 
                         // run through all chunks transmitted chunkIDSet and accept 'maxDeliver' chunks not in own chunkbuffer
-                        for (i = 0; i < chunkID_set_size((struct chunkID_set*) chunkIDSetReceived); ++i) {
+                        for (i = 0; i < chunkID_set_size((struct chunkID_set*) chunkIDSetReceived) && count < maxDeliver; ++i) {
                             int chunkId = chunkID_set_get_chunk((struct chunkID_set*) chunkIDSetReceived, i);
                             const struct chunk *chunk;
                             chunk = cb_get_chunk((struct chunk_buffer*) chunkBuffer, chunkId);
-                            if (chunk == NULL && count < maxDeliver) {
-                                chunkID_set_add_chunk((struct chunkID_set*) chunkIDSetForMe, chunkId);
-                                ++count;
+                            if (chunk == NULL) {
+                                // set first chunk
+                                if (firstChunk == -1) {
+#ifdef DEBUG
+                                    fprintf(stderr, "DEBUG: first chunk is %d\n", chunkId);
+#endif
+                                    firstChunk = chunkId;
+                                }
+                                if (chunkId >= firstChunk) {
+                                    chunkID_set_add_chunk((struct chunkID_set*) chunkIDSetForMe, chunkId);
+                                    ++count;
+                                }
                             }
                         }
 

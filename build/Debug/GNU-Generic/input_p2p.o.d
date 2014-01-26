@@ -31,7 +31,7 @@ build/Debug/GNU-Generic/input_p2p.o: input_p2p.c \
   /usr/home/tobias/dev/GRAPES/include/chunkbuffer.h \
   /usr/home/tobias/dev/GRAPES/include/chunkidset.h \
   /usr/home/tobias/dev/GRAPES/include/scheduler_common.h input_p2p.h \
-  threads.h
+  threads.h output_factory.h output_interface.h
 
 /usr/local/include/xine/xine_internal.h:
 
@@ -124,3 +124,7 @@ streamer.h:
 input_p2p.h:
 
 threads.h:
+
+output_factory.h:
+
+output_interface.h:

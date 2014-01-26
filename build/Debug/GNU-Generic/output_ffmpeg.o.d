@@ -28,7 +28,8 @@ build/Debug/GNU-Generic/output_ffmpeg.o: output_ffmpeg.c \
   /usr/local/include/xine/xine_internal.h \
   /usr/local/include/xine/info_helper.h \
   /usr/local/include/xine/alphablend.h \
-  /usr/local/include/xine/video_out.h output_interface.h
+  /usr/local/include/xine/video_out.h output_interface.h network.h \
+  /usr/home/tobias/dev/GRAPES/include/net_helper.h
 
 /usr/home/tobias/dev/GRAPES/include/chunk.h:
 
@@ -115,3 +116,7 @@ input_p2p.h:
 /usr/local/include/xine/video_out.h:
 
 output_interface.h:
+
+network.h:
+
+/usr/home/tobias/dev/GRAPES/include/net_helper.h:

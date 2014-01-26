@@ -15,7 +15,7 @@
 //#include "streamer.h"
 //#include "output_factory.h"
 
-extern int nextChunk;
+extern int firstChunk;
 
 char *network_create_interface(char *interface);
 int network_add_to_peerChunk(struct nodeID *remote, int chunkId);
@@ -26,7 +26,7 @@ struct ChunkIDSet *network_get_needed_chunks(struct ChunkIDSet *chunkIDSetReceiv
 void network_handle_chunk_message(struct nodeID *remote, uint8_t *buffer, int numberOfReceivedBytes);
 void network_handle_secured_chunk_message(struct nodeID *remote, uint8_t *buffer, int numberOfReceivedBytes);
 void network_handle_secured_login_message(struct nodeID *remote, uint8_t *buffer, int numberOfReceivedBytes);
-
+void network_ask_for_chunk(int chunkID);
 
 #endif	/* NETWORK_H */
 

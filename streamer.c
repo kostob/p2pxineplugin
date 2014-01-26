@@ -25,8 +25,8 @@ static int configPort = 5555;
 static char *configPeersample = "protocol=cyclon";
 static char *configChunkBuffer = "size=100,time=now"; // size must be same value as chunkBufferSizeMax
 static char *configChunkIDSet = "size=100"; // size must be same value as chunkBufferSizeMax
-static char *configOutput = "buffer=75,dechunkiser=raw,payload=avf";
-static int configOutputBufferSize = 75;
+static char *configOutput = "buffer=200,dechunkiser=raw,payload=avf";
+static int configOutputBufferSize = 200;
 
 struct ChunkBuffer *chunkBuffer = NULL;
 int chunkBufferSize = 0;
@@ -188,6 +188,7 @@ int init(p2p_input_plugin_t *plugin) { //char *interface, char *serverAddress, i
 
     // initialize output
     output = output_init(plugin, configOutput);
+    //plugin->output = output; // needed to close the output later
     if (output == NULL) {
         fprintf(stderr, "Error occurred: see message above.\n");
         return -1;

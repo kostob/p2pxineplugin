@@ -159,7 +159,7 @@ struct ChunkIDSet *network_get_needed_chunks(struct ChunkIDSet *chunkIDSetReceiv
         return NULL;
     }
     for (i = 0; i < chunkID_set_size((struct chunkID_set*) chunkIDSetReceived); ++i) {
-        if (chunkID_set_get_chunk((struct chunkID_set*) chunkIDSetReceived, i) > nextChunk) {
+        if (chunkID_set_get_chunk((struct chunkID_set*) chunkIDSetReceived, i) > firstChunk) {
             chunkID_set_add_chunk((struct chunkID_set*) cset, chunkID_set_get_chunk((struct chunkID_set*) chunkIDSetReceived, i));
         }
     }
@@ -234,7 +234,7 @@ void network_handle_secured_chunk_message(struct nodeID* remote, uint8_t *buffer
     res = parseChunkMsg(buffer + 1, numberOfReceivedBytes - 1, &c, &transid);
     if (res > 0) {
         res = output->module->deliver_secured_data_chunk(output->context, &c);
-        if(res < 0) {
+        if (res < 0) {
             fprintf(stderr, "\tError: Something went wrong while processing the secured chunk data!\n");
             free(c.data);
             free(c.attributes);
@@ -259,12 +259,30 @@ void network_handle_secured_login_message(struct nodeID* remote, uint8_t *buffer
     res = parseChunkMsg(buffer + 1, numberOfReceivedBytes - 1, &c, &transid);
     if (res > 0) {
         res = output->module->deliver_secured_data_login(output->context, &c);
-        if(res < 0) {
+        if (res < 0) {
             fprintf(stderr, "\tError: Something went wrong while processing the secured login data!\n");
             free(c.data);
             free(c.attributes);
         }
     } else {
         fprintf(stderr, "\tError: can't decode secure login data!\n");
+    }
+}
+
+void network_ask_for_chunk(int chunkId) {
+    int numberOfNeighbours, i;
+    const struct nodeID * const *neighbours;
+    neighbours = psample_get_cache(peersampleContext, &numberOfNeighbours);
+
+    struct ChunkIDSet *cset;
+    chunkID_set_add_chunk(cset, chunkId);
+
+    for (i = 0; i < numberOfNeighbours; ++i) {
+#ifdef DEBUG
+        char addr[256];
+        node_addr(neighbours[i], addr, 256);
+        fprintf(stderr, "DEBUG: requested chunk from %s\n", addr);
+#endif
+        requestChunks((struct nodeID*) neighbours[i], (struct chunkID_set*) cset, 1, 0);
     }
 }

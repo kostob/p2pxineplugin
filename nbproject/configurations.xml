@@ -53,6 +53,9 @@
             <pElem>/usr/home/tobias/dev/GRAPES/include</pElem>
             <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>DEBUG</Elem>
+          </preprocessorList>
         </cTool>
         <ccTool>
           <incDir>

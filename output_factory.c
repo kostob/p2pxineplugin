@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 
+#include "input_p2p.h"
 #include "output_factory.h"
 
 struct output_module *output_init(p2p_input_plugin_t *plugin, const char *config) {
